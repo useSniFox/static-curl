@@ -153,7 +153,7 @@ install_cross_compile() {
 
     export CC=${DIR}/${SOURCE_DIR}/bin/${SOURCE_DIR}-cc \
            CXX=${DIR}/${SOURCE_DIR}/bin/${SOURCE_DIR}-c++ \
-           CFLAGS="-O3 -Wno-error=unknown-pragmas -Wno-error=sign-compare -Wno-error=cast-align -Wno-maybe-uninitialized" \
+           CFLAGS="-O3 -fPIC -Wno-error=unknown-pragmas -Wno-error=sign-compare -Wno-error=cast-align -Wno-maybe-uninitialized" \
            STRIP=${DIR}/${SOURCE_DIR}/bin/${SOURCE_DIR}-strip \
            PATH=${DIR}/${SOURCE_DIR}/bin:$PATH
 }
@@ -166,7 +166,7 @@ install_cross_compile_debian() {
     arch_name=${ARCH}
 
     case "${ARCH}" in
-    	armv5)
+        armv5)
             arch_compiler=arm
             c_lib=gnueabi
             arch_name=arm
@@ -198,7 +198,7 @@ install_cross_compile_debian() {
 
     export LD="/usr/bin/${arch_compiler}-linux-${c_lib}-ld" \
            STRIP="/usr/bin/${arch_compiler}-linux-${c_lib}-strip" \
-           CFLAGS="-O3" \
+           CFLAGS="-O3 -fPIC" \
            LDFLAGS="--ld-path=/usr/bin/${arch_compiler}-linux-${c_lib}-ld ${LDFLAGS}";
 }
 
@@ -457,7 +457,7 @@ compile_zlib() {
     url="${URL}"
     download_and_extract "${url}"
 
-    ./configure --prefix="${PREFIX}" --static;
+    CFLAGS="-fPIC" ./configure --prefix="${PREFIX}" --static;
     make -j "$(nproc)";
     make install;
 
@@ -473,7 +473,7 @@ compile_libunistring() {
     url="https://mirrors.kernel.org/gnu/libunistring/libunistring-${LIBUNISTRING_VERSION}.tar.xz"
     download_and_extract "${url}"
 
-    ./configure --host "${TARGET}" --prefix="${PREFIX}" --disable-rpath --disable-shared \
+    CFLAGS="-fPIC" ./configure --host "${TARGET}" --prefix="${PREFIX}" --disable-rpath --disable-shared \
         --disable-dependency-tracking --enable-year2038;
     make -j "$(nproc)";
     make install;
@@ -492,7 +492,7 @@ compile_libidn2() {
 
     PKG_CONFIG="pkg-config --static --with-path=${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig" \
     LDFLAGS="${LDFLAGS} --static" \
-    ./configure \
+    CFLAGS="-fPIC" ./configure \
         --host "${TARGET}" \
         --with-libunistring-prefix="${PREFIX}" \
         --prefix="${PREFIX}" \
@@ -514,7 +514,7 @@ compile_libpsl() {
 
     PKG_CONFIG="pkg-config --static --with-path=${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig" \
     LDFLAGS="${LDFLAGS} --static" \
-      ./configure --host="${TARGET}" --prefix="${PREFIX}" \
+    CFLAGS="-fPIC" ./configure --host="${TARGET}" --prefix="${PREFIX}" \
         --enable-static --enable-shared=no --enable-builtin --disable-runtime;
 
     make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}";
@@ -532,7 +532,7 @@ compile_ares() {
     url="${URL}"
     download_and_extract "${url}"
 
-    ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --disable-shared;
+    CFLAGS="-fPIC" ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --disable-shared;
     make -j "$(nproc)";
     make install;
 
@@ -592,9 +592,9 @@ compile_libssh2() {
 
     autoreconf -fi
     PKG_CONFIG="pkg-config --static --with-path=${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig" \
-        ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --enable-shared=no \
-            --with-crypto=openssl --with-libssl-prefix="${PREFIX}" \
-            --disable-examples-build;
+    CFLAGS="-fPIC" ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --enable-shared=no \
+        --with-crypto=openssl --with-libssl-prefix="${PREFIX}" \
+        --disable-examples-build;
     make -j "$(nproc)";
     make install;
 
@@ -612,8 +612,8 @@ compile_nghttp2() {
 
     autoreconf -i --force
     PKG_CONFIG="pkg-config --static --with-path=${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig" \
-        ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --enable-http3 \
-            --enable-lib-only --enable-shared=no;
+    CFLAGS="-fPIC" ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --enable-http3 \
+        --enable-lib-only --enable-shared=no;
     make -j "$(nproc)";
     make install;
 
@@ -635,8 +635,8 @@ compile_ngtcp2() {
 
     autoreconf -i --force
     PKG_CONFIG="pkg-config --static --with-path=${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig" \
-        ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --with-openssl="${PREFIX}" \
-            --with-libnghttp3="${PREFIX}" --enable-lib-only --enable-shared=no;
+    CFLAGS="-fPIC" ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --with-openssl="${PREFIX}" \
+        --with-libnghttp3="${PREFIX}" --enable-lib-only --enable-shared=no;
 
     make -j "$(nproc)";
     make install;
@@ -655,7 +655,7 @@ compile_nghttp3() {
 
     autoreconf -i --force
     PKG_CONFIG="pkg-config --static --with-path=${PREFIX}/lib/pkgconfig:${PREFIX}/lib64/pkgconfig" \
-        ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --enable-shared=no --enable-lib-only;
+    CFLAGS="-fPIC" ./configure --host="${TARGET}" --prefix="${PREFIX}" --enable-static --enable-shared=no --enable-lib-only;
     make -j "$(nproc)";
     make install;
 
@@ -674,7 +674,7 @@ compile_brotli() {
     mkdir -p out
     cd out/
 
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DBUILD_SHARED_LIBS=OFF \
+    CFLAGS="-fPIC" cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DBUILD_SHARED_LIBS=OFF \
         -DCMAKE_SYSTEM_PROCESSOR="${ARCH}" ..;
     cmake --build . --config Release --target install;
 
@@ -693,7 +693,7 @@ compile_zstd() {
     mkdir -p build/cmake/out/
     cd build/cmake/out/
 
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_SYSTEM_PROCESSOR="${ARCH}" \
+    CFLAGS="-fPIC" cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DCMAKE_SYSTEM_PROCESSOR="${ARCH}" \
         -DZSTD_BUILD_STATIC=ON -DZSTD_BUILD_SHARED=OFF ..;
     cmake --build . --config Release --target install;
 
@@ -719,7 +719,7 @@ compile_trurl() {
 
     export PATH=${PREFIX}/bin:$PATH
 
-    LDFLAGS="-static -Wl,-s ${LDFLAGS}" make PREFIX="${PREFIX}";
+    LDFLAGS="-static -Wl,-s ${LDFLAGS}" CFLAGS="-fPIC" make PREFIX="${PREFIX}";
     make install;
 
     if [ -f LICENSES/COPYING ]; then
@@ -745,7 +745,7 @@ curl_config() {
         autoreconf -fi;
     fi
 
-    PKG_CONFIG="pkg-config --static" \
+    CFLAGS="-fPIC" PKG_CONFIG="pkg-config --static" \
         ./configure \
             --host="${TARGET}" \
             --prefix="${PREFIX}" \
@@ -799,7 +799,7 @@ compile_curl() {
         # add -Wno-cast-align to avoid error alignment from 4 to 8
         make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}" CFLAGS="-Wno-cast-align ${CFLAGS}";
     else
-        make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}";
+        make -j "$(nproc)" LDFLAGS="-static -all-static -Wl,-s ${LDFLAGS}" CFLAGS="${CFLAGS}";
     fi
 
     _copy_license COPYING curl;
